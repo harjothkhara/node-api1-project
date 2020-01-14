@@ -35,17 +35,20 @@ server.get('/api/users/:id', (req, res) => {
   // a promise is a callback function that runs once the asynchronous operation is complete
   db.findById(id)
     .then(user => {
-      console.log('User', user);
-      res.status(200).json(user);
+      if (user) {
+        res.status(200).json(user);
+      } else {
+        res
+          .status(404)
+          .json({ message: 'The user with the specified ID does not exist.' });
+      }
     })
-    .catch(error => {
-      console.log(error);
-      res.status(404).json({
-        message: 'The user with the specified ID does not exist'
-      });
+    .catch(() => {
+      res
+        .status(500)
+        .json({ errorMessage: 'The user information could not be retrieved.' });
     });
 });
-
 // POST to '/api/users'
 server.post('/api/users', (req, res) => {
   const hobbitData = req.body;
