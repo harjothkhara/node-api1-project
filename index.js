@@ -71,6 +71,7 @@ server.post('/api/users', (req, res) => {
 });
 
 // PUT to '/api/users/:id'
+
 server.put('/api/users/:id', (req, res) => {
   const { id } = req.params;
   const hobbitData = req.body;
@@ -79,46 +80,41 @@ server.put('/api/users/:id', (req, res) => {
       message: 'Please provide name and bio for the user'
     });
   } else {
-    //nested a promise within a promise to see if id of user is there -> for validation
-    db.update(id, hobbitData) // checking if user is found and new information is valid
+    db.update(id, hobbitData)
       .then(updated => {
-        db.findById(id) // checking to see if specified id of user is found
-          .then(user => {
-            res.status(200).json(user);
-          })
-          .catch(err => {
-            res.status(404).json({
-              message: 'The user with the specified ID does not exist'
-            });
-          });
+        if (updated) {
+          res.status(204).json(updated);
+        } else {
+          res
+            .status(404)
+            .json({ message: 'The user with the specified ID does not exist' });
+        }
       })
       .catch(err => {
+        console.log(err);
         res
           .status(500)
-          .json({ message: 'The user information could not be modified' });
+          .json({ errorMessage: 'The user information could not be modified' });
       });
   }
 });
 
 server.delete('/api/users/:id', (req, res) => {
   const { id } = req.params;
-  db.findById(id)
-    .then(user => {
-      db.remove(id)
-        .then(user => {
-          console.log('Deleted User', user);
-          res.status(201).json(user);
-        })
-        .catch(err => {
-          console.log(err);
-          res.status(500).json({ message: 'The user could not be removed' });
-        });
+  db.remove(id)
+    .then(removed => {
+      if (removed) {
+        res.status(204).json(removed);
+      } else {
+        res
+          .status(404)
+          .json({ message: 'The user with the specified ID does not exist' });
+      }
     })
-    .catch(err =>
-      res
-        .status(404)
-        .json({ message: 'The user with the specified ID does not exist' })
-    );
+    .catch(err => {
+      console.log(err);
+      res.status(500).json({ errorMessage: 'The user could not be removed' });
+    });
 });
 
 // server setup and listening for requests
